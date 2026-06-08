@@ -38,6 +38,12 @@ Users interacting with the game client can perform the following actions:
 
 ### **Architecture & Infrastructure**
 
+
+
+<img width="1799" height="805" alt="v0 0 1-gridfall" src="https://github.com/user-attachments/assets/5a364e41-db70-4a91-a71d-2210dede480c" />
+
+
+
 #### **1. API Layer (HTTP)**
 
 - A simple HTTP server will act as the entry point for standard stateless requests.
