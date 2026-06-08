@@ -3,7 +3,7 @@
 //   sqlc v1.31.1
 // source: user.sql
 
-package db
+package store
 
 import (
 	"context"
@@ -107,6 +107,22 @@ type UpdateUserNameParams struct {
 
 func (q *Queries) UpdateUserName(ctx context.Context, arg UpdateUserNameParams) error {
 	_, err := q.db.Exec(ctx, updateUserName, arg.ID, arg.Name)
+	return err
+}
+
+const updateUserRole = `-- name: UpdateUserRole :exec
+UPDATE users
+  set role = $2
+WHERE id = $1
+`
+
+type UpdateUserRoleParams struct {
+	ID   pgtype.UUID
+	Role UserRole
+}
+
+func (q *Queries) UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) error {
+	_, err := q.db.Exec(ctx, updateUserRole, arg.ID, arg.Role)
 	return err
 }
 

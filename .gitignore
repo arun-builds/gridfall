@@ -22,3 +22,10 @@ coverage.html
 .idea/
 .vscode/
 *.swp
+
+
+/node_modules/
+
+# React Router
+/.react-router/
+/build/

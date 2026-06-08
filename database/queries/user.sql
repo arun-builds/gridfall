@@ -24,6 +24,11 @@ UPDATE users
   set type = $2
 WHERE id = $1;
 
+-- name: UpdateUserRole :exec
+UPDATE users
+  set role = $2
+WHERE id = $1;
+
 -- name: DeleteAuthor :exec
 DELETE FROM users
 WHERE id = $1;
