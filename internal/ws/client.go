@@ -1,8 +1,14 @@
 package ws
 
-import "github.com/gorilla/websocket"
+import (
+	"encoding/json"
+	"log"
+
+	"github.com/gorilla/websocket"
+)
 
 type Client struct {
+	ID   string
 	Conn *websocket.Conn
 	Send chan []byte
 	Room *Room
@@ -10,6 +16,7 @@ type Client struct {
 
 func (c *Client) ReadPump() {
 	defer func() {
+		log.Printf("ws client disconnected from room %s", c.Room.ID)
 		c.Room.Unregister <- c
 		c.Conn.Close()
 	}()
@@ -18,9 +25,22 @@ func (c *Client) ReadPump() {
 		_, message, err := c.Conn.ReadMessage()
 
 		if err != nil {
+			log.Printf("ws read error: %v", err)
 			break
 		}
 
+		var event Event
+
+		if err := json.Unmarshal(message, &event); err != nil {
+			log.Printf("client=%s invalid json", c.ID)
+			continue
+		}
+
+		log.Printf(
+			"client=%s event=%s",
+			c.ID,
+			event.Type,
+		)
 		c.Room.Broadcast <- message
 	}
 }
@@ -35,6 +55,7 @@ func (c *Client) WritePump() {
 		)
 
 		if err != nil {
+			log.Printf("ws write error: %v", err)
 			return
 		}
 	}
