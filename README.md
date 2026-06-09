@@ -72,8 +72,6 @@ Used for data that needs to persist long-term, such as user profiles and admin-d
 |`name`|String/Varchar|16 bytes|
 |`type`|Integer/Enum|4 bytes|
 
-#### **State Storage (Redis)**
+#### **State Storage**
 
-Used for active game states to ensure low latency and fast read/write operations during live gameplay.
-
-- _Implementation Note for v0.0.1:_ While game states _could_ simply be stored in the WebSocket server's memory for the initial prototype, integrating Redis early is easy to set up and serves as a vital first step toward horizontally scaling the server in the future.
+We will be storing game states in-memory for simplicity
