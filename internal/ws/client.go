@@ -46,8 +46,13 @@ func (c *Client) ReadPump() {
 
 		case "attack":
 			c.handleAttack(event)
+		case "place_entities":
+			c.handlePlacement(event)
 		default:
-			c.Send <- []byte(`{"type":"error","message":"unknown event"}`)
+			c.sendJSON(ErrorResponse{
+				Type:    "error",
+				Message: "unknown event",
+			})
 		}
 	}
 }

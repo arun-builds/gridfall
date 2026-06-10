@@ -4,6 +4,9 @@ package ws
 // 1 = alive entity
 // 2 = destroyed entity
 // 3 = miss
+//
+
+const BoardSize = 8
 
 func makeBoard(size int) [][]int {
 	board := make([][]int, size)
@@ -21,7 +24,7 @@ func countRemainingEntities(board [][]int) int {
 
 	for _, row := range board {
 		for _, cell := range row {
-			if cell == 1 {
+			if cell > 0 {
 				count++
 			}
 		}

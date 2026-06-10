@@ -1,14 +1,14 @@
 package ws
 
-func (r *Room) Opponent(c *Client) *Client {
-
-	if r.Player1 == c {
+func (r *Room) getOpponent(client *Client) *Client {
+	switch client {
+	case r.Player1:
 		return r.Player2
-	}
 
-	if r.Player2 == c {
+	case r.Player2:
 		return r.Player1
-	}
 
-	return nil
+	default:
+		return nil
+	}
 }
