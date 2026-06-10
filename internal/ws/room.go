@@ -19,10 +19,22 @@ type Room struct {
 func NewRoom(id string) *Room {
 	log.Printf("creating room: %s", id)
 
+	board1 := makeBoard(5)
+	board2 := makeBoard(5)
+
+	// Temporary hardcoded entities
+	board1[0][0] = 1
+	board1[2][1] = 1
+
+	board2[1][2] = 1
+	board2[3][3] = 1
+
 	return &Room{
 		ID: id,
 		State: MatchState{
 			CurrentTurn: "",
+			Board1:      board1,
+			Board2:      board2,
 		},
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
