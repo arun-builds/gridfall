@@ -413,6 +413,7 @@ func (r *Room) GetState(client *Client) GameStateResponse {
 
 	return GameStateResponse{
 		Type:         "game_state",
+		YourID:       client.ID,
 		Phase:        r.State.Phase,
 		CurrentTurn:  r.State.CurrentTurn,
 		YourBoard:    copyBoard(yourBoard),

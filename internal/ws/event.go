@@ -33,6 +33,7 @@ type AttackResult struct {
 
 type GameStateResponse struct {
 	Type         string     `json:"type"`
+	YourID       string     `json:"your_id"`
 	Phase        MatchPhase `json:"phase"`
 	CurrentTurn  string     `json:"current_turn"`
 	YourBoard    [][]int    `json:"your_board"`

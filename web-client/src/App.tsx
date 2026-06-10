@@ -1,21 +1,70 @@
-import { Button } from "@/components/ui/button"
+import { useGameSocket } from "@/hooks/useGameSocket"
+import { LobbyScreen } from "@/components/game/LobbyScreen"
+import { PlacementScreen } from "@/components/game/PlacementScreen"
+import { BattleScreen } from "@/components/game/BattleScreen"
+import { GameOverScreen } from "@/components/game/GameOverScreen"
 
 export function App() {
-  return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
-        </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>d</kbd> to toggle dark mode)
+  const { state, connect, disconnect, sendPlacement, sendAttack } =
+    useGameSocket()
+
+  // Lobby: not yet connected or waiting for opponent
+  if (
+    state.connectionStatus === "idle" ||
+    state.connectionStatus === "connecting" ||
+    (state.connectionStatus === "connected" && state.phase === "waiting")
+  ) {
+    return (
+      <LobbyScreen
+        connectionStatus={state.connectionStatus}
+        onJoinRoom={(roomId) => connect(roomId)}
+      />
+    )
+  }
+
+  // Disconnected mid-game
+  if (state.connectionStatus === "disconnected") {
+    return (
+      <div className="disconnect-screen">
+        <div className="disconnect-content">
+          <div className="disconnect-icon">⚠</div>
+          <h1 className="disconnect-title">Connection Lost</h1>
+          <p className="disconnect-subtitle">
+            You were disconnected from the server.
+          </p>
+          <button
+            className="disconnect-btn"
+            onClick={() => disconnect()}
+          >
+            Return to Lobby
+          </button>
         </div>
       </div>
-    </div>
-  )
+    )
+  }
+
+  // Placement phase
+  if (state.phase === "placement") {
+    return <PlacementScreen onPlaceEntities={sendPlacement} />
+  }
+
+  // Battle phase
+  if (state.phase === "battle") {
+    return <BattleScreen state={state} onAttack={sendAttack} />
+  }
+
+  // Game over
+  if (state.phase === "game_over") {
+    return (
+      <GameOverScreen
+        winner={state.winner}
+        myId={state.myId}
+        onPlayAgain={() => disconnect()}
+      />
+    )
+  }
+
+  return null
 }
 
 export default App
