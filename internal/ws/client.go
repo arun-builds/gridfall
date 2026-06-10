@@ -45,9 +45,11 @@ func (c *Client) ReadPump() {
 		switch event.Type {
 
 		case "attack":
-			c.handleAttack(event)
+			c.handleAttackEvent(event)
 		case "place_entities":
-			c.handlePlacement(event)
+			c.handlePlacementEvent(event)
+		case "get_state":
+			c.handleGetStateEvent()
 		default:
 			c.sendJSON(ErrorResponse{
 				Type:    "error",

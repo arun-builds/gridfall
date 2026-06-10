@@ -25,14 +25,22 @@ func (h *Hub) HandleWS(
 		return
 	}
 
+	roomID := r.URL.Query().Get("room")
+
+	if roomID == "" {
+		roomID = "default"
+	}
+
+	room := h.GetOrCreateRoom(roomID)
+
 	client := &Client{
 		ID:   uuid.New().String(),
 		Conn: conn,
 		Send: make(chan []byte, 256),
-		Room: h.Room,
+		Room: room,
 	}
 
-	h.Room.Register <- client
+	room.Register <- client
 
 	go client.WritePump()
 	go client.ReadPump()

@@ -14,7 +14,7 @@ func (c *Client) sendJSON(v any) {
 	c.Send <- b
 }
 
-func (c *Client) handleAttack(event Event) {
+func (c *Client) handleAttackEvent(event Event) {
 	var payload AttackPayload
 
 	if err := json.Unmarshal(event.Payload, &payload); err != nil {
@@ -33,7 +33,7 @@ func (c *Client) handleAttack(event Event) {
 	}
 }
 
-func (c *Client) handlePlacement(event Event) {
+func (c *Client) handlePlacementEvent(event Event) {
 	var payload PlaceEntitiesPayload
 
 	if err := json.Unmarshal(event.Payload, &payload); err != nil {
@@ -51,4 +51,9 @@ func (c *Client) handlePlacement(event Event) {
 		})
 		return
 	}
+}
+
+func (c *Client) handleGetStateEvent() {
+	state := c.Room.GetState(c)
+	c.sendJSON(state)
 }

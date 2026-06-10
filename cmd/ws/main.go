@@ -10,8 +10,6 @@ import (
 func main() {
 	hub := ws.NewHub()
 
-	go hub.Run()
-
 	http.HandleFunc("/ws", hub.HandleWS)
 
 	log.Println("WS server listening on :8080")

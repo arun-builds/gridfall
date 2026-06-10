@@ -1,11 +1,5 @@
 package ws
 
-// 0 = empty
-// 1 = alive entity
-// 2 = destroyed entity
-// 3 = miss
-//
-
 const BoardSize = 8
 
 func makeBoard(size int) [][]int {

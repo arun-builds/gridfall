@@ -31,6 +31,14 @@ type AttackResult struct {
 	Winner          string `json:"winner,omitempty"`
 }
 
+type GameStateResponse struct {
+	Type         string     `json:"type"`
+	Phase        MatchPhase `json:"phase"`
+	CurrentTurn  string     `json:"current_turn"`
+	YourBoard    [][]int    `json:"your_board"`
+	OpponentView [][]int    `json:"opponent_view"`
+}
+
 type ErrorResponse struct {
 	Type    string `json:"type"`
 	Message string `json:"message"`

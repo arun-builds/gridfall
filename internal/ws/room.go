@@ -17,6 +17,8 @@ type Room struct {
 
 	Register   chan *Client
 	Unregister chan *Client
+
+	OnEmpty func(roomID string)
 }
 
 func NewRoom(id string) *Room {
@@ -128,6 +130,17 @@ func (r *Room) Run() {
 				playerID(r.Player2),
 				r.State.CurrentTurn,
 			)
+
+			if r.Player1 == nil && r.Player2 == nil {
+
+				log.Printf("room %s is empty", r.ID)
+
+				if r.OnEmpty != nil {
+					r.OnEmpty(r.ID)
+				}
+
+				return
+			}
 		}
 	}
 }
@@ -382,4 +395,27 @@ func (r *Room) Attack(
 	log.Printf("turn switched to %s", opponent.ID)
 
 	return nil
+}
+
+func (r *Room) GetState(client *Client) GameStateResponse {
+	var yourBoard [][]int
+	var opponentBoard [][]int
+
+	switch client {
+	case r.Player1:
+		yourBoard = r.State.Board1
+		opponentBoard = r.State.Board2
+
+	case r.Player2:
+		yourBoard = r.State.Board2
+		opponentBoard = r.State.Board1
+	}
+
+	return GameStateResponse{
+		Type:         "game_state",
+		Phase:        r.State.Phase,
+		CurrentTurn:  r.State.CurrentTurn,
+		YourBoard:    copyBoard(yourBoard),
+		OpponentView: maskBoard(opponentBoard),
+	}
 }

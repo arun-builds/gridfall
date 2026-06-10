@@ -1,8 +1,9 @@
 package ws
 
 const (
-	EmptyCell = 0
-	MissCell  = -99
+	EmptyCell   = 0
+	MissCell    = -99
+	UnknownCell = -100
 
 	Scout      = 1
 	Battleship = 2
