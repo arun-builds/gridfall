@@ -2,6 +2,7 @@ package ws
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/gorilla/websocket"
@@ -41,7 +42,14 @@ func (c *Client) ReadPump() {
 			c.ID,
 			event.Type,
 		)
-		c.Room.Broadcast <- message
+
+		switch event.Type {
+
+		case "attack":
+			c.handleAttack(event)
+		default:
+			c.Send <- []byte(`{"type":"error","message":"unknown event"}`)
+		}
 	}
 }
 
@@ -59,4 +67,67 @@ func (c *Client) WritePump() {
 			return
 		}
 	}
+}
+
+func (c *Client) handleAttack(event Event) {
+
+	var payload AttackPayload
+
+	if err := json.Unmarshal(event.Payload, &payload); err != nil {
+
+		c.Send <- []byte(`{"type":"error","message":"invalid attack payload"}`)
+
+		return
+	}
+
+	if c.Room.State.CurrentTurn != c.ID {
+
+		c.Send <- []byte(`{"type":"error","message":"not your turn"}`)
+
+		return
+	}
+
+	opponent := c.Room.Opponent(c)
+
+	if opponent == nil {
+
+		c.Send <- []byte(`{"type":"error","message":"waiting for opponent"}`)
+
+		return
+	}
+
+	log.Printf(
+		"attack accepted from %s at (%d,%d)",
+		c.ID,
+		payload.X,
+		payload.Y,
+	)
+
+	c.Room.State.CurrentTurn = opponent.ID
+
+	c.Send <- []byte(
+		fmt.Sprintf(
+			`{
+				"type":"attack_accepted",
+				"x":%d,
+				"y":%d
+			}`,
+			payload.X,
+			payload.Y,
+		),
+	)
+
+	opponent.Send <- []byte(
+		fmt.Sprintf(
+			`{
+				"type":"opponent_attacked",
+				"x":%d,
+				"y":%d
+			}`,
+			payload.X,
+			payload.Y,
+		),
+	)
+
+	log.Printf("turn switched to %s", opponent.ID)
 }

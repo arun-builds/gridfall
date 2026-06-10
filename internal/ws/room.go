@@ -5,18 +5,25 @@ import (
 )
 
 type Room struct {
-	ID         string
-	Clients    map[*Client]bool
-	Broadcast  chan []byte
+	ID string
+
+	Player1 *Client
+	Player2 *Client
+
+	State MatchState
+
 	Register   chan *Client
 	Unregister chan *Client
 }
 
 func NewRoom(id string) *Room {
+	log.Printf("creating room: %s", id)
+
 	return &Room{
-		ID:         id,
-		Clients:    make(map[*Client]bool),
-		Broadcast:  make(chan []byte),
+		ID: id,
+		State: MatchState{
+			CurrentTurn: "",
+		},
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
 	}
@@ -27,28 +34,115 @@ func (r *Room) Run() {
 		select {
 
 		case client := <-r.Register:
-			r.Clients[client] = true
-			log.Printf("ws client connected id: %s", client.ID)
+
+			log.Printf("registering client %s", client.ID)
+
+			if r.Player1 == nil {
+
+				r.Player1 = client
+
+				log.Printf(
+					"assigned player1=%s",
+					client.ID,
+				)
+
+			} else if r.Player2 == nil {
+
+				r.Player2 = client
+
+				log.Printf(
+					"assigned player2=%s",
+					client.ID,
+				)
+
+			} else {
+
+				log.Printf(
+					"room full, rejecting client %s",
+					client.ID,
+				)
+
+				client.Send <- []byte(
+					`{"type":"error","message":"room full"}`,
+				)
+				client.Conn.Close()
+
+				continue
+			}
+
+			if r.State.CurrentTurn == "" {
+
+				r.State.CurrentTurn = client.ID
+
+				log.Printf(
+					"first turn assigned to %s",
+					client.ID,
+				)
+			}
+
+			log.Printf(
+				"room status p1=%s p2=%s currentTurn=%q",
+				playerID(r.Player1),
+				playerID(r.Player2),
+				r.State.CurrentTurn,
+			)
 
 		case client := <-r.Unregister:
-			if _, ok := r.Clients[client]; ok {
-				delete(r.Clients, client)
+
+			log.Printf(
+				"unregistering client %s",
+				client.ID,
+			)
+
+			owned := false
+
+			if r.Player1 == client {
+
+				r.Player1 = nil
+
+				owned = true
+			}
+
+			if r.Player2 == client {
+
+				r.Player2 = nil
+
+				owned = true
+			}
+
+			// If the player whose turn it was disconnected,
+			// clear the turn.
+			if owned && r.State.CurrentTurn == client.ID {
+
+				r.State.CurrentTurn = ""
+
+				log.Printf(
+					"current turn cleared because %s disconnected",
+					client.ID,
+				)
+			}
+
+			// Only accepted players own a Send channel
+			// that the room is responsible for closing.
+			if owned {
+
 				close(client.Send)
-				log.Printf("ws client disconnected id: %s", client.ID)
 			}
 
-		case message := <-r.Broadcast:
-			log.Printf("room %s: broadcasting message (%d bytes) to %d clients", r.ID, len(message), len(r.Clients))
-			for client := range r.Clients {
-				select {
-				case client.Send <- message:
-
-				default:
-					log.Printf("room %s: dropping slow client", r.ID)
-					delete(r.Clients, client)
-					close(client.Send)
-				}
-			}
+			log.Printf(
+				"room status p1=%s p2=%s currentTurn=%q",
+				playerID(r.Player1),
+				playerID(r.Player2),
+				r.State.CurrentTurn,
+			)
 		}
 	}
+}
+
+func playerID(c *Client) string {
+	if c == nil {
+		return "-"
+	}
+
+	return c.ID
 }
