@@ -11,44 +11,72 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createAuthor = `-- name: CreateAuthor :one
+const createGuestUser = `-- name: CreateGuestUser :one
 insert into users(
-name, type
+  name, type
 ) values (
-$1, $2
+  $1, 'guest'
 )
-returning id, name, type, role
+returning id, name, email, password_hash, type, role, created_at
 `
 
-type CreateAuthorParams struct {
-	Name string
-	Type AccountType
-}
-
-func (q *Queries) CreateAuthor(ctx context.Context, arg CreateAuthorParams) (User, error) {
-	row := q.db.QueryRow(ctx, createAuthor, arg.Name, arg.Type)
+func (q *Queries) CreateGuestUser(ctx context.Context, name string) (User, error) {
+	row := q.db.QueryRow(ctx, createGuestUser, name)
 	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Email,
+		&i.PasswordHash,
 		&i.Type,
 		&i.Role,
+		&i.CreatedAt,
 	)
 	return i, err
 }
 
-const deleteAuthor = `-- name: DeleteAuthor :exec
+const createRegisteredUser = `-- name: CreateRegisteredUser :one
+insert into users(
+  name, email, password_hash, type
+) values (
+  $1, $2, $3, 'registered'
+)
+returning id, name, email, password_hash, type, role, created_at
+`
+
+type CreateRegisteredUserParams struct {
+	Name         string
+	Email        pgtype.Text
+	PasswordHash pgtype.Text
+}
+
+func (q *Queries) CreateRegisteredUser(ctx context.Context, arg CreateRegisteredUserParams) (User, error) {
+	row := q.db.QueryRow(ctx, createRegisteredUser, arg.Name, arg.Email, arg.PasswordHash)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.PasswordHash,
+		&i.Type,
+		&i.Role,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const deleteUser = `-- name: DeleteUser :exec
 DELETE FROM users
 WHERE id = $1
 `
 
-func (q *Queries) DeleteAuthor(ctx context.Context, id pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, deleteAuthor, id)
+func (q *Queries) DeleteUser(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteUser, id)
 	return err
 }
 
 const getUser = `-- name: GetUser :one
-select id, name, type, role from users
+select id, name, email, password_hash, type, role, created_at from users
 where id = $1
 `
 
@@ -58,14 +86,37 @@ func (q *Queries) GetUser(ctx context.Context, id pgtype.UUID) (User, error) {
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Email,
+		&i.PasswordHash,
 		&i.Type,
 		&i.Role,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getUserByEmail = `-- name: GetUserByEmail :one
+select id, name, email, password_hash, type, role, created_at from users
+where email = $1
+`
+
+func (q *Queries) GetUserByEmail(ctx context.Context, email pgtype.Text) (User, error) {
+	row := q.db.QueryRow(ctx, getUserByEmail, email)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.PasswordHash,
+		&i.Type,
+		&i.Role,
+		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const listUsers = `-- name: ListUsers :many
-select id, name, type, role from users
+select id, name, email, password_hash, type, role, created_at from users
 order by name
 `
 
@@ -81,8 +132,11 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.Email,
+			&i.PasswordHash,
 			&i.Type,
 			&i.Role,
+			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -140,4 +194,34 @@ type UpdateUserTypeParams struct {
 func (q *Queries) UpdateUserType(ctx context.Context, arg UpdateUserTypeParams) error {
 	_, err := q.db.Exec(ctx, updateUserType, arg.ID, arg.Type)
 	return err
+}
+
+const upgradeGuestToRegistered = `-- name: UpgradeGuestToRegistered :one
+UPDATE users
+  SET email = $2,
+      password_hash = $3,
+      type = 'registered'
+WHERE id = $1 AND type = 'guest'
+RETURNING id, name, email, password_hash, type, role, created_at
+`
+
+type UpgradeGuestToRegisteredParams struct {
+	ID           pgtype.UUID
+	Email        pgtype.Text
+	PasswordHash pgtype.Text
+}
+
+func (q *Queries) UpgradeGuestToRegistered(ctx context.Context, arg UpgradeGuestToRegisteredParams) (User, error) {
+	row := q.db.QueryRow(ctx, upgradeGuestToRegistered, arg.ID, arg.Email, arg.PasswordHash)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.PasswordHash,
+		&i.Type,
+		&i.Role,
+		&i.CreatedAt,
+	)
+	return i, err
 }

@@ -10,7 +10,6 @@ import (
 type UserRepository interface {
 	List(ctx context.Context) ([]store.User, error)
 	Get(ctx context.Context, id pgtype.UUID) (store.User, error)
-	Create(ctx context.Context, params store.CreateAuthorParams) (store.User, error)
 	UpdateName(ctx context.Context, params store.UpdateUserNameParams) error
 	UpdateType(ctx context.Context, params store.UpdateUserTypeParams) error
 	Delete(ctx context.Context, id pgtype.UUID) error
@@ -32,10 +31,6 @@ func (r *userRepository) Get(ctx context.Context, id pgtype.UUID) (store.User, e
 	return r.queries.GetUser(ctx, id)
 }
 
-func (r *userRepository) Create(ctx context.Context, params store.CreateAuthorParams) (store.User, error) {
-	return r.queries.CreateAuthor(ctx, params)
-}
-
 func (r *userRepository) UpdateName(ctx context.Context, params store.UpdateUserNameParams) error {
 	return r.queries.UpdateUserName(ctx, params)
 }
@@ -45,5 +40,5 @@ func (r *userRepository) UpdateType(ctx context.Context, params store.UpdateUser
 }
 
 func (r *userRepository) Delete(ctx context.Context, id pgtype.UUID) error {
-	return r.queries.DeleteAuthor(ctx, id)
+	return r.queries.DeleteUser(ctx, id)
 }

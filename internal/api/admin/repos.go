@@ -35,5 +35,5 @@ func (r *adminRepository) UpdateUserRole(ctx context.Context, params store.Updat
 }
 
 func (r *adminRepository) DeleteUser(ctx context.Context, id pgtype.UUID) error {
-	return r.queries.DeleteAuthor(ctx, id)
+	return r.queries.DeleteUser(ctx, id)
 }

@@ -25,8 +25,8 @@ type AttackPayload struct {
 type AttackResult struct {
 	Type            string `json:"type"`
 	Result          string `json:"result"`
-	X               int    `json:"x,omitempty"`
-	Y               int    `json:"y,omitempty"`
+	X               int    `json:"x"`
+	Y               int    `json:"y"`
 	DestroyedEntity string `json:"destroyed_entity,omitempty"`
 	Winner          string `json:"winner,omitempty"`
 }

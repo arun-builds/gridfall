@@ -12,8 +12,11 @@ CREATE TYPE user_role AS ENUM (
 create table users(
     id uuid primary key default gen_random_uuid(),
     name varchar(50) not null,
+    email varchar(255) unique,
+    password_hash text,
     type account_type not null,
-    role user_role NOT NULL DEFAULT 'player'
+    role user_role NOT NULL DEFAULT 'player',
+    created_at timestamptz NOT NULL DEFAULT now()
 );
 
 

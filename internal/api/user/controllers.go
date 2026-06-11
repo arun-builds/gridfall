@@ -48,29 +48,6 @@ func (h *Handler) GetUser(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, user)
 }
 
-func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
-	var req struct {
-		Name string            `json:"name"`
-		Type store.AccountType `json:"type"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
-		return
-	}
-
-	user, err := h.repo.Create(r.Context(), store.CreateAuthorParams{
-		Name: req.Name,
-		Type: req.Type,
-	})
-	if err != nil {
-		log.Printf("error creating user: %v", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	writeJSON(w, http.StatusCreated, user)
-}
-
 func (h *Handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	var id pgtype.UUID

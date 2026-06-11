@@ -17,6 +17,11 @@ export function useGameSocket() {
       reconnectTimerRef.current = null
     }
     if (wsRef.current) {
+      // Remove handlers before closing to prevent the async onclose
+      // from dispatching DISCONNECTED after an intentional RESET.
+      wsRef.current.onclose = null
+      wsRef.current.onerror = null
+      wsRef.current.onmessage = null
       wsRef.current.close()
       wsRef.current = null
     }
@@ -76,7 +81,7 @@ export function useGameSocket() {
           case "error":
             dispatch({
               type: "SERVER_ERROR",
-              message: (data as { message: string }).message,
+              message: (data as unknown as { message: string }).message,
             })
             break
 

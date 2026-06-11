@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/arun-builds/gridfall/internal/api/admin"
+	"github.com/arun-builds/gridfall/internal/api/auth"
 	"github.com/arun-builds/gridfall/internal/api/user"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -26,12 +27,22 @@ func (a *Api) RegisterRoutes() http.Handler {
 	}))
 
 	r.Get("/", a.HelloWorldHandler)
+	r.Get("/health", a.health)
+	auth.RegisterPublicRoutes(r, a.authHandler)
 
-	userHandler := user.NewHandler(a.userRepo)
-	user.RegisterRoutes(r, userHandler)
+	r.Group(func(r chi.Router) {
+		r.Use(auth.JWTMiddleware(a.jwtSecret))
 
-	adminHandler := admin.NewHandler(a.adminRepo)
-	admin.RegisterRoutes(r, adminHandler)
+		auth.RegisterProtectedRoutes(r, a.authHandler)
+
+		// User routes
+		userHandler := user.NewHandler(a.userRepo)
+		user.RegisterRoutes(r, userHandler)
+
+		// Admin routes
+		adminHandler := admin.NewHandler(a.adminRepo)
+		admin.RegisterRoutes(r, adminHandler)
+	})
 
 	return r
 }
